@@ -9,9 +9,11 @@ BEGIN {
         check(http_get(BASE "/redirect",r) && r["body"] == "hello\n" && r["redirects"] == 1, "GET redirect and trailing newline")
         check(http_get(BASE "/chunked",r) && r["body"] == "a\nb", "wire chunk decoding")
         h["Content-Type"] = "text/plain"
-        check(http_post(BASE "/echo", "quote' $HOME `id`\nlast",h,r) && r["body"] == "quote' $HOME `id`\nlast", "POST quoting and no final newline")
+        check(http_post(BASE "/echo", "quote' $HOME `id`\nlast",h,r) && r["body"] == "quote' $HOME `id`\nlast", "POST literal bytes and no final newline")
         check(http_get(BASE "/missing",r) && r["status"] == 404, "HTTP error is response")
         check(!http_get(BASE "/loop",r) && r["error"] == "redirect limit exceeded", "redirect bound")
+        check(!http_get("https://127.0.0.1/",r) && r["error"] ~ /TLS/, "explicit HTTPS rejection")
+        check(!http_get("http://127.0.0.1:99999/",r) && r["error"] == "invalid TCP port", "invalid port")
         h["Bad\nHeader"] = "value"
         check(!http_post(BASE, "", h,r), "header injection")
     }
